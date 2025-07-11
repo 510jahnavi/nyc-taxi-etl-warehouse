@@ -1,0 +1,4 @@
+pyspark
+apache-airflow
+snowflake-connector-python
+pandas

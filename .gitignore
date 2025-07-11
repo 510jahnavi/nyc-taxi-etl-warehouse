@@ -1,0 +1,20 @@
+# Byte-compiled / cache files
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+venv/
+
+# Airflow metadata
+airflow_home/
+
+# Data files (raw & processed)
+data/raw/
+data/processed/
+
+# Logs
+logs/
+
+# OS files
+.DS_Store

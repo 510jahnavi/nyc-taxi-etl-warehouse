@@ -1,20 +1,29 @@
-# Byte-compiled / cache files
+# Byte-compiled / Python cache files
 __pycache__/
 *.py[cod]
 *$py.class
 
-# Virtual environment
+# Virtual environments
 venv/
-
-# Airflow metadata
-airflow_home/
-
-# Data files (raw & processed)
-data/raw/
-data/processed/
-
-# Logs
-logs/
+ENV/
+env/
 
 # OS files
 .DS_Store
+
+# Airflow metadata DB & logs (should stay local)
+airflow/
+airflow_home/
+
+# Data files (keep raw & processed local)
+data/raw/
+data/processed/
+
+# Airflow logs inside Docker volume (if any)
+logs/
+
+# VSCode config (optional)
+.vscode/
+
+# Environment variables
+.env

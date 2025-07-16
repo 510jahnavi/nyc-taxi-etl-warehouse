@@ -1,0 +1,58 @@
+version: '3'
+
+services:
+  airflow-init:
+    image: apache/airflow:2.9.0-python3.12
+    container_name: airflow-init
+    entrypoint: >
+      bash -c "
+      airflow db migrate &&
+      airflow users create --username admin --password admin --firstname Admin --lastname User --role Admin --email admin@example.com
+      "
+    env_file:
+      - .env  # ✅ pass your .env secrets
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./data:/opt/airflow/data
+      - ./scripts:/opt/airflow/scripts
+      - ./airflow:/opt/airflow
+
+  airflow-webserver:
+    image: apache/airflow:2.9.0-python3.12
+    container_name: airflow-webserver
+    restart: always
+    depends_on:
+      - airflow-init
+    environment:
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////opt/airflow/airflow.db
+    env_file:
+      - .env  # ✅ pass your .env secrets
+    ports:
+      - "8080:8080"
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./data:/opt/airflow/data
+      - ./scripts:/opt/airflow/scripts
+      - ./airflow:/opt/airflow
+    command: >
+      bash -c "airflow webserver"
+
+  airflow-scheduler:
+    image: apache/airflow:2.9.0-python3.12
+    container_name: airflow-scheduler
+    restart: always
+    depends_on:
+      - airflow-init
+    environment:
+      - AIRFLOW__CORE__LOAD_EXAMPLES=False
+      - AIRFLOW__DATABASE__SQL_ALCHEMY_CONN=sqlite:////opt/airflow/airflow.db
+    env_file:
+      - .env  # ✅ pass your .env secrets
+    volumes:
+      - ./dags:/opt/airflow/dags
+      - ./data:/opt/airflow/data
+      - ./scripts:/opt/airflow/scripts
+      - ./airflow:/opt/airflow
+    command: >
+      bash -c "airflow scheduler"

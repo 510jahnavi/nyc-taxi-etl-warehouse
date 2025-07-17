@@ -1,168 +1,150 @@
-```markdown
 # NYC Taxi ETL Pipeline 🚕✨
 
-This project is an end-to-end **ETL pipeline** for NYC Taxi trip data:
-- Ingests Parquet data
-- Cleans and filters rows using **Apache Spark**
-- Loads cleaned data into a **Snowflake** data warehouse
-- Orchestrated by **Apache Airflow**, running in **Docker**
+A complete end-to-end ETL pipeline using **Apache Airflow**, **PySpark**, and **Snowflake**, containerized with **Docker Compose**.
 
 ---
+## 🚀 Overview
 
-## 🚀 Tech Stack
-
-- **Apache Spark**: Data cleaning & transformation
-- **Snowflake**: Cloud data warehouse
-- **Apache Airflow**: Workflow orchestration
-- **Docker Compose**: Local dev & deployment
+- **Input**: Raw NYC Yellow Taxi `.parquet` data
+- **ETL**: Data cleaning with PySpark
+- **Orchestration**: DAGs using Apache Airflow
+- **Warehouse**: Final data loaded into Snowflake
+- **Containerization**: All services run in Docker
 
 ---
 
 ## 📂 Project Structure
-
 ```
-
 .
-├── dags/
-│   └── nyc\_taxi\_etl\_dag.py     # Airflow DAG calling spark-submit
-├── scripts/
-│   └── etl\_spark.py            # Standalone Spark ETL
+├── dags/                  # Airflow DAGs
+│   └── nyc_taxi_etl_dag.py
+├── scripts/               # Standalone Spark ETL script
+│   └── etl_spark.py
 ├── data/
-│   ├── raw/                    # Input Parquet files
-│   └── processed/              # Cleaned Parquet output
-├── airflow/                    # Airflow metadata DB & logs (local only)
-├── docker-compose.yml          # Airflow setup in Docker
-├── .env                        # ❗ NOT committed — contains Snowflake creds
+│   ├── raw/               # Raw Parquet files
+│   └── processed/         # Cleaned Parquet output
+├── airflow/               # Airflow metadata DB & logs (local only)
+├── docker-compose.yml     # Docker Compose config
+├── .env                   # ❗ NOT committed — contains Snowflake creds
 └── README.md
-
 ```
 
 ---
 
-## ⚙️ How It Works
+## ⚙️ Setup Instructions
 
-1. **Spark ETL**
-   - Reads raw NYC Yellow Taxi data (Parquet)
-   - Filters out invalid rows (e.g., negative fare/passenger count)
-   - Writes cleaned data as single-part Parquet
-   - Uses `.env` for Snowflake creds
-
-2. **Load to Snowflake**
-   - Uses `PUT` and `COPY INTO` to stage & load cleaned data
-   - Loads into `nyc_taxi_cleaned` table
-   - Validates row counts
-
-3. **Airflow Orchestration**
-   - `nyc_taxi_etl_dag` uses `BashOperator`:
-     - Runs Spark job with `spark-submit`
-   - Uses environment variables from `.env`
-   - All containers run via Docker Compose
-
----
-
-## 🗝️ Environment Variables
-
-Create a `.env` in your project root:
+### 1. Clone the repository
+```bash
+git clone https://github.com/your-username/nyc-taxi-etl-warehouse.git
+cd nyc-taxi-etl-warehouse
 ```
 
-SNOWFLAKE\_USER=your\_username
-SNOWFLAKE\_PASSWORD=your\_password
-SNOWFLAKE\_ACCOUNT=your\_account
-SNOWFLAKE\_WAREHOUSE=your\_warehouse
-SNOWFLAKE\_DATABASE=your\_database
-SNOWFLAKE\_SCHEMA=your\_schema
-
-````
-❗ **Never commit this file!** Add `.env` to `.gitignore`.
-
----
-
-## 🐳 Quick Start
-
+### 2. Create `.env` file for Snowflake credentials
 ```bash
-# 1️⃣ Clone this repo
-git clone https://github.com/YOUR_GITHUB_USERNAME/nyc-taxi-etl.git
-cd nyc-taxi-etl
-
-# 2️⃣ Create .env file (see above)
-
-# 3️⃣ Initialize Airflow DB & admin user
-docker compose up airflow-init
-
-# 4️⃣ Start Airflow webserver & scheduler
-docker compose up -d
-
-# 5️⃣ Access Airflow UI:
-http://localhost:8080
-username: admin
-password: admin
-
-# 6️⃣ Trigger the DAG & watch logs!
-````
-
----
-
-## ✅ Next Improvements
-
-* [ ] Use Airflow Variables & Connections for secrets
-* [ ] Store raw files in S3 and use external stage
-* [ ] Add Slack/Email failure notifications
-* [ ] Schedule DAG to run daily
-* [ ] Deploy Spark on a real cluster
-
----
-
-## ✨ Credits
-
-Created as a practical data engineering project to demonstrate ETL orchestration, big data processing, and cloud data warehousing.
-
----
-
-**📬 Questions? PRs welcome!**
-
-````
-
----
-
-## ✅✅✅ HOW TO PUSH TO GITHUB
-
-1️⃣ **Initialize git** (if you haven’t):
-```bash
-git init
-````
-
-2️⃣ **Add remote** (if you haven’t):
-
-```bash
-git remote add origin https://github.com/YOUR_USERNAME/nyc-taxi-etl.git
+touch .env
 ```
 
-3️⃣ **Stage everything**:
+Paste this inside `.env` (replace with your credentials):
+```env
+SNOWFLAKE_USER=MISJAHNAVI510
+SNOWFLAKE_PASSWORD=YourPassword
+SNOWFLAKE_ACCOUNT=DHXZDRX-ZI36614
+SNOWFLAKE_WAREHOUSE=MY_WH
+SNOWFLAKE_DATABASE=NYC_TAXI_DB
+SNOWFLAKE_SCHEMA=NYC_TAXI_SCHEMA
+```
+
+> ✅ `.env` is **ignored** by Git via `.gitignore`
+
+---
+
+### 3. Add Raw Data
+
+Place at least one `.parquet` file in:
+```
+data/raw/yellow_tripdata_2024-12.parquet
+```
+
+You can download sample data from: https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page
+
+---
+
+### 4. Start the Airflow stack
+```bash
+docker compose up --build
+```
+
+> Access Airflow at: http://localhost:8080  
+> Default login: `admin / admin`
+
+---
+
+### 5. Trigger the DAG
+
+- Open the **Airflow UI**
+- Toggle the `nyc_taxi_etl_dag` to **"On"**
+- Click ▶️ to trigger the DAG manually
+
+---
+
+## 🧠 DAG Flow
+
+1. **PySpark ETL**:  
+   - Reads `.parquet` files from `data/raw/`
+   - Cleans data: removes rows with 0 passengers or fare
+   - Writes cleaned data to `data/processed/` as `.parquet`
+
+2. **Snowflake Load**:  
+   - Reads latest `.parquet` file
+   - Uploads to Snowflake stage
+   - Loads into `nyc_taxi_cleaned` table via `COPY INTO`
+
+---
+
+## 🐍 Run Spark script locally (optional)
+```bash
+spark-submit scripts/etl_spark.py
+```
+
+---
+
+## 🧾 Sample Output
+
+Logs show counts:
+```
+✅ RAW DF COUNT: 6131
+✅ CLEAN DF COUNT: 5678
+✅ Final rows in nyc_taxi_cleaned: 5678
+```
+
+---
+
+## 🧹 To stop & clean up
+```bash
+docker compose down --volumes
+```
+
+---
+
+## 🔒 Security
+
+- Snowflake credentials are stored in `.env` file (never committed).
+- Output `.parquet` files are verified for size (>50KB) before uploading.
+- Errors raise exceptions and prevent partial uploads.
+
+---
+
+## 🔁 Pushing to GitHub
 
 ```bash
 git add .
-```
-
-4️⃣ **Double check your `.gitignore` includes `.env`!**
-
-```bash
-# Always test:
-git status
-```
-
-You should NOT see `.env` as staged.
-
-5️⃣ **Commit your changes**:
-
-```bash
-git commit -m "Initial commit: NYC Taxi ETL with Spark, Airflow, Snowflake, Docker"
-```
-
-6️⃣ **Push to GitHub**:
-
-```bash
-git branch -M main  # optional
+git commit -m "Initial ETL pipeline with Airflow, Spark & Snowflake"
+git remote add origin https://github.com/your-username/nyc-taxi-etl-warehouse.git
 git push -u origin main
 ```
 
+---
 
+## 📜 License
+
+MIT © 2025
